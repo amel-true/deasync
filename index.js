@@ -6,68 +6,68 @@
  * Released under the MIT license
  */
 
-var fs = require('fs'),
+let fs = require('fs'),
 	path = require('path'),
-	binding;
+	binding
 
 // Seed random numbers [gh-82] if on Windows. See https://github.com/laverdet/node-fibers/issues/82
-if (process.platform === 'win32') Math.random();
+if (process.platform === 'win32') Math.random()
 
 
 // Look for binary for this platform
-var nodeV = 'node-' + /[0-9]+\.[0-9]+/.exec(process.versions.node)[0];
-var nodeVM = 'node-' + /[0-9]+/.exec(process.versions.node)[0];
-var modPath = path.join(__dirname, 'bin', process.platform + '-' + process.arch + '-' + nodeV, 'deasync');
+let nodeV = 'node-' + /[0-9]+\.[0-9]+/.exec(process.versions.node)[0]
+let nodeVM = 'node-' + /[0-9]+/.exec(process.versions.node)[0]
+let modPath = path.join(__dirname, 'bin', process.platform + '-' + process.arch + '-' + nodeV, 'deasync')
 try {
 	try {
-		fs.statSync(modPath + '.node');
+		fs.statSync(modPath + '.node')
 	} catch (ex) {
-		modPath = path.join(__dirname, 'bin', process.platform + '-' + process.arch + '-' + nodeVM, 'deasync');
-		fs.statSync(modPath + '.node');
+		modPath = path.join(__dirname, 'bin', process.platform + '-' + process.arch + '-' + nodeVM, 'deasync')
+		fs.statSync(modPath + '.node')
 	}
-	binding = require(modPath);
+	binding = require(modPath)
 } catch (ex) {
-	binding = require('bindings')('deasync');
+	binding = require('bindings')('deasync')
 }
 
 function deasync(fn) {
 	return function () {
-		var done = false;
-		var args = Array.prototype.slice.apply(arguments).concat(cb);
-		var err;
-		var res;
+		let done = false
+		let args = Array.prototype.slice.apply(arguments).concat(cb)
+		let err
+		let res
 
-		fn.apply(this, args);
+		fn.apply(this, args)
 		module.exports.loopWhile(function () {
-			return !done;
-		});
+			return !done
+		})
 		if (err)
-			throw err;
+			throw err
 
-		return res;
+		return res
 
 		function cb(e, r) {
-			err = e;
-			res = r;
-			done = true;
+			err = e
+			res = r
+			done = true
 		}
 	}
 }
 
-module.exports = deasync;
+module.exports = deasync
 
 module.exports.sleep = deasync(function (timeout, done) {
-	setTimeout(done, timeout);
-});
+	setTimeout(done, timeout)
+})
 
 module.exports.runLoopOnce = function () {
-	process._tickCallback();
-	binding.run();
-};
+	process._tickCallback()
+	binding.run()
+}
 
 module.exports.loopWhile = function (pred) {
 	while (pred()) {
-		process._tickCallback();
-		if (pred()) binding.run();
+		process._tickCallback()
+		if (pred()) binding.run()
 	}
-};
+}
